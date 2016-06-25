@@ -23,8 +23,9 @@ private:
 	CCLayerColor* b_layercolor;
 	bool isMerging;
 	blockType type;
-	void initSquareBlock(int number, int width, int height);
-	void initCircleBlock(int number, float radius);
+	void initSquareBlock(int number, int width, int height, Color3B color);
+	void initCircleBlock(int number, float radius, Color3B color);
+	void initLevelBlock();
 };
 
 #endif

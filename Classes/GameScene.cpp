@@ -13,7 +13,7 @@ void GameScene::setPhysicsWorld(PhysicsWorld* world) { m_world = world; }
 Scene* GameScene::createScene()
 {
 	auto scene = Scene::createWithPhysics();
-	scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
+	//scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
 	scene->getPhysicsWorld()->setGravity(Point(0, 0));
 
 	auto layer = GameScene::create(scene->getPhysicsWorld());
