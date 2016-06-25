@@ -2,6 +2,7 @@
 #ifndef __MENU_SEBCE_H__
 #define __MENU_SEBCE_H__
 #include "cocos2d.h"
+#include "GameScene.h"
 #include "SimpleAudioEngine.h"
 USING_NS_CC;
 
@@ -28,6 +29,8 @@ private:
 	void AddEdge();
 	void AddStartBtn();
 	void ShootBullet();
+	void AddScore();
+	void LoadMusic();
 };
 
 #endif // __MENU_SEBCE_H__

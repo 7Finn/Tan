@@ -5,6 +5,9 @@
 #include "cocos2d.h"
 #include "Block.h"
 #include "SimpleAudioEngine.h"
+#include "GlobalVar.h"
+#include "StartScene.h"
+#include "cocostudio/CocoStudio.h"
 USING_NS_CC;
 
 class GameScene : public cocos2d::Layer
@@ -19,9 +22,6 @@ public:
 
 	// implement the "static create()" method manually
 	static GameScene* create(PhysicsWorld* world);
-
-	//static void setBulletSpeed(float speed);
-	//static void setShootInterval(float interval);
 
 private:
 	Sprite* player;
@@ -48,6 +48,7 @@ private:
 	void onTouchEnded(Touch *touch, Event *unused_event);
 	void addContactListener();
 	void addEdge();
+	void addPlayer();
 	bool onConcactBegan(PhysicsContact& contact);
 	void fire();
 	void createBlockS(float);
@@ -57,6 +58,7 @@ private:
 	void removeBlock(Sprite*);
 	void updateScore(int score, cocos2d::Label*, int flag);
 	void initBlockPhysicalBody(Block* block);
+	void PlayBackgroundMusic();
 };
 
 #endif // __GAME_Scene_H__

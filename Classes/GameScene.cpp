@@ -1,7 +1,5 @@
 #include "GameScene.h"
-#include "Block.h"
-#include "SimpleAudioEngine.h"
-#include "cocostudio/CocoStudio.h"
+
 #pragma execution_character_set("utf-8")
 #define database UserDefault::getInstance()
 using namespace CocosDenshion;
@@ -13,7 +11,7 @@ void GameScene::setPhysicsWorld(PhysicsWorld* world) { m_world = world; }
 Scene* GameScene::createScene()
 {
 	auto scene = Scene::createWithPhysics();
-	//scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
+	scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
 	scene->getPhysicsWorld()->setGravity(Point(0, 0));
 
 	auto layer = GameScene::create(scene->getPhysicsWorld());
@@ -41,17 +39,16 @@ bool GameScene::init(PhysicsWorld* world)
 	tmx->setScale(Director::getInstance()->getContentScaleFactor());
 	this->addChild(tmx, 0);
 	Vec2 origin = Director::getInstance()->getVisibleOrigin();
-
-	//添加炮台
-	player = Sprite::create("Player.png");
-	player->setPosition(visibleSize.width / 2, visibleSize.height / 2);
-	player->setScale(0.6f);
-	addChild(player, 10);
+	GlobalVar::GlobalScore = -1;
+	
 
 	addTouchListener();
 	scheduleUpdate();
 	addContactListener();
 	addEdge();
+	addPlayer();
+	LoadMusic();
+	PlayBackgroundMusic();
 
 
 	//初始化值
@@ -84,7 +81,6 @@ bool GameScene::init(PhysicsWorld* world)
 
 	schedule(schedule_selector(GameScene::createBlockC), creatInterval);
 	schedule(schedule_selector(GameScene::createBlockS), creatInterval);
-	//schedule(schedule_selector(GameScene::checkBlock), 3.0f);
 	return true;
 }
 
@@ -97,6 +93,22 @@ GameScene * GameScene::create(PhysicsWorld * world) {
 	delete pRet;
 	pRet = NULL;
 	return NULL;
+}
+
+void GameScene::addPlayer() {
+	//添加炮台
+	player = Sprite::create("Player.png");
+	player->setPosition(visibleSize.width / 2, visibleSize.height / 2);
+	player->setScale(0.6f);
+
+	player->setPhysicsBody(PhysicsBody::createCircle(player->getContentSize().height/4, PhysicsMaterial(0.1f, 1.0f, 0.0f)));
+	auto physicsBody = player->getPhysicsBody();
+	physicsBody->setCategoryBitmask(0x04);
+	physicsBody->setContactTestBitmask(0x04);
+	physicsBody->setCollisionBitmask(0x0);
+	physicsBody->setTag(50);
+
+	addChild(player, 10);
 }
 
 void GameScene::createBlockS(float dt) {
@@ -134,7 +146,7 @@ void GameScene::createBlockS(float dt) {
 	auto block = Block::createSquareBlock(num, 50, 50);
 	block->setPosition(tmpx, tmpy);
 	initBlockPhysicalBody(block);
-	block->runAction(MoveTo::create(60.0f, player->getPosition()));
+	block->runAction(MoveTo::create(10.0f, player->getPosition()));
 	blocks.push_back(block);
 	addChild(block);
 }
@@ -180,7 +192,7 @@ void GameScene::createBlockC(float dt) {
 
 void GameScene::initBlockPhysicalBody(Block* block) {
 	auto physicsBody = block->getPhysicsBody();
-	physicsBody->setCategoryBitmask(0x02);
+	physicsBody->setCategoryBitmask(0x06);
 	physicsBody->setCollisionBitmask(0x01);
 	physicsBody->setContactTestBitmask(0xFF);
 	physicsBody->setTag(10);
@@ -217,7 +229,6 @@ bool GameScene::onTouchBegan(Touch *touch, Event *unused_event) {
 	player->setRotation(degree - 180);
 	return true;
 }
-
 void GameScene::onTouchMoved(Touch *touch, Event *unused_event) {
 	Vec2 position = touch->getLocation();
 
@@ -311,15 +322,19 @@ bool GameScene::onConcactBegan(PhysicsContact& contact) {
 				bullet = sp1;
 			}
 
+			if (block->getIsMerging()) return false;
+
 			int blockNumber = block->getNumber() - 1;
 			if (blockNumber == 0) {
-				//更新分数
+				// 更新分数
 				score++;
 				updateScore(score, scoreLable, 0);
 				if (score > highestScore) {
 					highestScore = score;
 					database->setIntegerForKey("highestScore", score);
 				}
+				// 播放音效
+				SimpleAudioEngine::sharedEngine()->playEffect("music/BlockDestroy.mp3", false);
 				removeBlock(block);
 				block->removeFromParentAndCleanup(true);
 			}
@@ -342,6 +357,36 @@ bool GameScene::onConcactBegan(PhysicsContact& contact) {
 			block2 = (Block*)sp2;
 			if (block1->getIsMerging() || block2->getIsMerging()) return false;
 			mergeBlock(block1, block2);
+		}
+
+		// 方块与玩家
+		if (tag1 == 50) {
+			Block* block2;
+			block2 = (Block*)sp2;
+
+			// 跳转回开始界面的回调
+			auto gameEnd = CallFunc::create([this]() {
+				GlobalVar::GlobalScore = score;
+				Director::getInstance()->replaceScene(TransitionFade::create(1.0f, StartScene::createScene(), Color3B(0, 0, 0)));
+			});
+
+			auto moveTo = MoveTo::create(0.5f, player->getPosition());
+			block2->stopAllActions();
+			block2->runAction(Sequence::create(moveTo, gameEnd, nullptr));
+		}
+		else if (tag2 == 50) {
+			Block* block1;
+			block1 = (Block*)sp1;
+
+			// 跳转回开始界面的回调
+			auto gameEnd = CallFunc::create([this]() {
+				GlobalVar::GlobalScore = score;
+				Director::getInstance()->replaceScene(TransitionFade::create(1.0f, StartScene::createScene(), Color3B(0, 0, 0)));
+			});
+
+			auto moveTo = MoveTo::create(0.5f, player->getPosition());
+			block1->stopAllActions();
+			block1->runAction(Sequence::create(moveTo, gameEnd, nullptr));
 		}
 	}
 	return true;
@@ -372,7 +417,6 @@ void GameScene::removeBlock(Sprite* sprite) {
 	
 }
 
-
 void GameScene::mergeBlock(Block* block1, Block* block2) {
 
 	// 正在融合
@@ -383,9 +427,7 @@ void GameScene::mergeBlock(Block* block1, Block* block2) {
 		int blockNumber1 = block1->getNumber();
 		int blockNumber2 = block2->getNumber();
 
-		Vec2 pos1 = block1->getPosition();
-		Vec2 pos2 = block2->getPosition();
-		Vec2 midPos = Vec2((pos1.x + pos2.x) / 2, (pos1.y + pos2.y) / 2);
+		Vec2 pos = block1->getPosition();
 
 		// 合成类型
 		blockType newType;
@@ -403,7 +445,7 @@ void GameScene::mergeBlock(Block* block1, Block* block2) {
 		if (newType == Square) block = Block::createSquareBlock(blockNumber1 + blockNumber2, 50, 50);
 		else block = Block::createCircleBlock(blockNumber1 + blockNumber2, 25);
 
-		block->setPosition(midPos);
+		block->setPosition(pos);
 		initBlockPhysicalBody(block);
 		block->runAction(MoveTo::create(random(40.0f, 50.0f), player->getPosition()));
 		blocks.push_back(block);
@@ -431,4 +473,10 @@ void GameScene::updateScore(int s, Label* sLabel, int flag) {
 	score_text = "Best: " + score_text;
 	sLabel->setString(score_text);
 	sLabel->updateContent();
+}
+
+
+void GameScene::PlayBackgroundMusic() {
+	//开始播放背景音乐，true表示循环
+	SimpleAudioEngine::sharedEngine()->playBackgroundMusic("music/Spectre.mp3", true);
 }

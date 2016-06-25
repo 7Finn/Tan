@@ -1,9 +1,8 @@
 #include "StartScene.h"
-#include "GameScene.h"
-#include "SimpleAudioEngine.h"
 
 #pragma execution_character_set("utf-8")
 USING_NS_CC;
+using namespace CocosDenshion;
 
 void StartScene::setPhysicsWorld(PhysicsWorld* world) { m_world = world; }
 
@@ -54,6 +53,8 @@ bool StartScene::init(PhysicsWorld* world)
 	AddEdge();
 	ShootBullet();
 	ShootBullet();
+	LoadMusic();
+	if (GlobalVar::GlobalScore != -1) AddScore();
 
 	return true;
 }
@@ -124,4 +125,33 @@ void StartScene::ShootBullet() {
 
 void StartScene::ToGameSence(Ref* pSender) {
 	Director::getInstance()->replaceScene(TransitionFade::create(1.0f, GameScene::createScene(), Color3B(0, 0, 0)));
+}
+
+void StartScene::AddScore() {
+	auto score = Sprite::create("title.png");
+	score->setPosition(Vec2(visibleSize.width*0.5, visibleSize.height*0.5));
+	addChild(score);
+
+	TTFConfig ttfConfig;
+	ttfConfig.fontFilePath = "fonts/arial.ttf";
+	ttfConfig.fontSize = 36;
+
+	auto scoreLable = Label::createWithTTF(ttfConfig, "");
+	scoreLable->setPosition(Vec2(origin.x + visibleSize.width / 2, visibleSize.height*0.35));
+	addChild(scoreLable, 100);
+
+	std::string score_text;
+	std::stringstream ss;
+	ss.clear();
+	ss << GlobalVar::GlobalScore;
+	ss >> score_text;
+	scoreLable->setString(score_text);
+	scoreLable->updateContent();
+}
+
+void StartScene::LoadMusic() {
+	//Ô¤¼ÓÔØ±³¾°ÒôÀÖ
+	SimpleAudioEngine::sharedEngine()->preloadBackgroundMusic("music/Spectre.mp3");
+	//Ô¤¼ÓÔØÒôÐ§
+	SimpleAudioEngine::sharedEngine()->preloadEffect("music/BlockDestroy.mp3");
 }
