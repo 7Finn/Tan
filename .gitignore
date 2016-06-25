@@ -1,0 +1,8 @@
+*.json
+proj.android/.classpath
+proj.android/
+proj.ios_mac/
+proj.win32/
+Tan.ccs
+Tan.udf
+Tan.cfg
