@@ -11,8 +11,9 @@ public:
 	Block();
 	static Block* createSquareBlock(int number, int width, int height); //创建正方形方块
 	static Block* createCircleBlock(int number, float radius); //创建圆形
-	int getNumber();//获取方块的数字
-	void setNumber(int number);//设置方块的数字
+	static Color3B AddBlockBackground(int number, int length, blockType type, Block* block);
+	int getNumber() { return b_number; }
+	void setNumber(int number);
 	bool getIsMerging() { return this->isMerging; };
 	void setIsMerging(bool merging) { this->isMerging = merging; };
 	void setType(blockType type) { this->type = type; }
@@ -24,8 +25,7 @@ private:
 	bool isMerging;
 	blockType type;
 	CCSprite* content;
-	void initSquareBlock(int number, int width, int height, Color3B color);
-	void initCircleBlock(int number, float radius, Color3B color);
+	void InitBlockLabel(int number, Color3B color);
 	void initLevelBlock();
 };
 

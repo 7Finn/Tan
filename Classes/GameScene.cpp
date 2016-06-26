@@ -335,11 +335,13 @@ bool GameScene::onConcactBegan(PhysicsContact& contact) {
 					database->setIntegerForKey("highestScore", score);
 				}
 				// 播放音效
-				//SimpleAudioEngine::sharedEngine()->playEffect("music/BlockDestroy.mp3", false);
+				SimpleAudioEngine::sharedEngine()->playEffect("music/BreakMusic.wav", false);
 				removeBlock(block);
 				block->removeFromParentAndCleanup(true);
 			}
-			else block->setNumber(blockNumber);
+			else {
+				block->setNumber(blockNumber);
+			}
 
 			Vec2 speed = bullet->getPhysicsBody()->getVelocity();
 			static int speed_up = 0;
@@ -477,14 +479,17 @@ void GameScene::updateScore(int s, Label* sLabel, int flag) {
 
 void GameScene::PlayBackgroundMusic() {
 	//开始播放背景音乐，true表示循环
-	//SimpleAudioEngine::sharedEngine()->playBackgroundMusic("music/BackgroundBGM.mp3", true);
+	SimpleAudioEngine::sharedEngine()->playBackgroundMusic("music/Morning Energy.mp3", true);
 }
 
 void GameScene::LoadMusic() {
 	// 加载背景音乐
-	//SimpleAudioEngine::sharedEngine()->preloadBackgroundMusic("music/BackgroundBGM.mp3");
+	SimpleAudioEngine::sharedEngine()->preloadBackgroundMusic("music/Morning Energy.mp3");
 	// 加载音效
 	SimpleAudioEngine::sharedEngine()->preloadEffect("music/LevelUpBGM.mp3");
+	SimpleAudioEngine::sharedEngine()->preloadEffect("music/BreakMusic.wav");
+	SimpleAudioEngine::sharedEngine()->setEffectsVolume(0.3);
+
 }
 
 
@@ -502,6 +507,7 @@ void GameScene::GameOver(Block* block) {
 		if (GlobalVar::lose == true) return;
 		GlobalVar::lose = true;
 		GlobalVar::GlobalScore = score;
+		SimpleAudioEngine::sharedEngine()->stopBackgroundMusic();
 		Clear();
 		Director::getInstance()->replaceScene(TransitionFade::create(1.0f, StartScene::createScene(), Color3B(0, 0, 0)));
 	});
