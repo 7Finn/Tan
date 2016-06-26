@@ -30,7 +30,6 @@ private:
 	void AddStartBtn();
 	void ShootBullet();
 	void AddScore();
-	void LoadMusic();
 };
 
 #endif // __MENU_SEBCE_H__

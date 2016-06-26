@@ -53,7 +53,6 @@ bool StartScene::init(PhysicsWorld* world)
 	AddEdge();
 	ShootBullet();
 	ShootBullet();
-	LoadMusic();
 	if (GlobalVar::GlobalScore != -1) AddScore();
 
 	return true;
@@ -149,11 +148,4 @@ void StartScene::AddScore() {
 	ss >> score_text;
 	scoreLable->setString("Score: " + score_text);
 	scoreLable->updateContent();
-}
-
-void StartScene::LoadMusic() {
-	//Ô¤¼ÓÔØ±³¾°ÒôÀÖ
-	SimpleAudioEngine::sharedEngine()->preloadBackgroundMusic("music/Spectre.mp3");
-	//Ô¤¼ÓÔØÒôÐ§
-	SimpleAudioEngine::sharedEngine()->preloadEffect("music/BlockDestroy.mp3");
 }

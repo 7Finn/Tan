@@ -36,6 +36,7 @@ bool GameScene::init(PhysicsWorld* world)
 
 	Vec2 origin = Director::getInstance()->getVisibleOrigin();
 	GlobalVar::GlobalScore = -1;
+	GlobalVar::lose = false;
 	
 
 	addTouchListener();
@@ -43,13 +44,16 @@ bool GameScene::init(PhysicsWorld* world)
 	addContactListener();
 	addEdge();
 	addPlayer();
+	LoadMusic();
 	PlayBackgroundMusic();
 
 
 	//初始化值
-	shootInterval = 0.15f;
+	shootInterval = 0.18f;
 	creatInterval = 2.0f;
 	bulletSpeed = 500.0f;
+	squareSpeed = 15.0f;
+	circleSpeed = 20.0f;
 	highestScore = database->getIntegerForKey("highestScore", 0);
 	score = 0;
 	time = 0.0f;
@@ -75,6 +79,7 @@ bool GameScene::init(PhysicsWorld* world)
 
 	schedule(schedule_selector(GameScene::createBlockC), creatInterval);
 	schedule(schedule_selector(GameScene::createBlockS), creatInterval);
+	schedule(schedule_selector(GameScene::AddLevelUp), 10.0f);
 	return true;
 }
 
@@ -140,7 +145,7 @@ void GameScene::createBlockS(float dt) {
 	auto block = Block::createSquareBlock(num, 50, 50);
 	block->setPosition(tmpx, tmpy);
 	initBlockPhysicalBody(block);
-	block->runAction(MoveTo::create(10.0f, player->getPosition()));
+	block->runAction(MoveTo::create(squareSpeed, player->getPosition()));
 	blocks.push_back(block);
 	addChild(block);
 }
@@ -179,7 +184,7 @@ void GameScene::createBlockC(float dt) {
 	auto block = Block::createCircleBlock(num, 25);
 	block->setPosition(tmpx, tmpy);
 	initBlockPhysicalBody(block);
-	block->runAction(MoveTo::create(45.0f, player->getPosition()));
+	block->runAction(MoveTo::create(circleSpeed, player->getPosition()));
 	blocks.push_back(block);
 	addChild(block);
 }
@@ -259,8 +264,8 @@ void GameScene::fire() {
 	bullet->setPhysicsBody(PhysicsBody::createCircle(25, PhysicsMaterial(0.1f, 1.0f, 0.0f)));
 	auto physicsBody = bullet->getPhysicsBody();
 	physicsBody->setGroup(-1);
-	physicsBody->setCategoryBitmask(0x03);
-	physicsBody->setCollisionBitmask(0x03);
+	physicsBody->setCategoryBitmask(0x0B);
+	physicsBody->setCollisionBitmask(0x0B);
 	physicsBody->setContactTestBitmask(0xFF);
 	physicsBody->setMass(1.0f);
 	physicsBody->setTag(1);
@@ -298,11 +303,13 @@ bool GameScene::onConcactBegan(PhysicsContact& contact) {
 		int tag1 = sp1->getPhysicsBody()->getTag();
 		int tag2 = sp2->getPhysicsBody()->getTag();
 
+		// --------------------------------------------------------------------
 		//炮弹与墙
 		if (tag1 + tag2 == 1) {
 			if (tag1 == 1) sp1->removeFromParentAndCleanup(true);
 			else sp2->removeFromParentAndCleanup(true);
 		}
+		// --------------------------------------------------------------------
 		//炮弹与块
 		if (tag1 + tag2 == 11) {
 			Block* block;
@@ -328,7 +335,7 @@ bool GameScene::onConcactBegan(PhysicsContact& contact) {
 					database->setIntegerForKey("highestScore", score);
 				}
 				// 播放音效
-				SimpleAudioEngine::sharedEngine()->playEffect("music/BlockDestroy.mp3", false);
+				//SimpleAudioEngine::sharedEngine()->playEffect("music/BlockDestroy.mp3", false);
 				removeBlock(block);
 				block->removeFromParentAndCleanup(true);
 			}
@@ -343,6 +350,7 @@ bool GameScene::onConcactBegan(PhysicsContact& contact) {
 			}
 		}
 
+		// --------------------------------------------------------------------
 		// 方块与方块
 		if (tag1 + tag2 == 20) {
 			Block* block1;
@@ -353,6 +361,7 @@ bool GameScene::onConcactBegan(PhysicsContact& contact) {
 			mergeBlock(block1, block2);
 		}
 
+		// --------------------------------------------------------------------
 		// 方块与玩家
 		if (tag1 == 50) {
 			Block* block2;
@@ -365,6 +374,18 @@ bool GameScene::onConcactBegan(PhysicsContact& contact) {
 			block1 = (Block*)sp1;
 
 			GameOver(block1);
+		}
+
+		// --------------------------------------------------------------------
+		// 炮弹与升级块
+		if (tag1 == 40) {
+			Sprite* levelUp;
+			levelUp = (Sprite*)sp1;
+			LevelUp(levelUp);
+		} else if (tag2 == 40) {
+			Sprite* levelUp;
+			levelUp = (Sprite*)sp2;
+			LevelUp(levelUp);
 		}
 	}
 	return true;
@@ -425,7 +446,7 @@ void GameScene::mergeBlock(Block* block1, Block* block2) {
 
 		block->setPosition(pos);
 		initBlockPhysicalBody(block);
-		block->runAction(MoveTo::create(random(40.0f, 50.0f), this->player->getPosition()));
+		block->runAction(MoveTo::create(random(20.0f, 30.0f), this->player->getPosition()));
 		blocks.push_back(block);
 		addChild(block);
 	});
@@ -456,12 +477,21 @@ void GameScene::updateScore(int s, Label* sLabel, int flag) {
 
 void GameScene::PlayBackgroundMusic() {
 	//开始播放背景音乐，true表示循环
-	//SimpleAudioEngine::sharedEngine()->playBackgroundMusic("music/Spectre.mp3", true);
+	//SimpleAudioEngine::sharedEngine()->playBackgroundMusic("music/BackgroundBGM.mp3", true);
 }
+
+void GameScene::LoadMusic() {
+	// 加载背景音乐
+	//SimpleAudioEngine::sharedEngine()->preloadBackgroundMusic("music/BackgroundBGM.mp3");
+	// 加载音效
+	SimpleAudioEngine::sharedEngine()->preloadEffect("music/LevelUpBGM.mp3");
+}
+
 
 void GameScene::Clear() {
 	this->unschedule(schedule_selector(GameScene::createBlockC));
 	this->unschedule(schedule_selector(GameScene::createBlockS));
+	this->unschedule(schedule_selector(GameScene::AddLevelUp));
 	_eventDispatcher->removeAllEventListeners();
 }
 
@@ -469,6 +499,8 @@ void GameScene::GameOver(Block* block) {
 	block->setIsMerging(true);
 	// 跳转回开始界面的回调
 	auto gameEnd = CallFunc::create([this]() {
+		if (GlobalVar::lose == true) return;
+		GlobalVar::lose = true;
 		GlobalVar::GlobalScore = score;
 		Clear();
 		Director::getInstance()->replaceScene(TransitionFade::create(1.0f, StartScene::createScene(), Color3B(0, 0, 0)));
@@ -477,4 +509,33 @@ void GameScene::GameOver(Block* block) {
 	auto moveTo = MoveTo::create(0.5f, player->getPosition());
 	block->stopAllActions();
 	block->runAction(Sequence::create(moveTo, gameEnd, nullptr));
+}
+
+void GameScene::AddLevelUp(float dt) {
+	float randomX = random(100.0f, visibleSize.width - 100.0f);
+	float randomY = random(100.0f, visibleSize.height - 100.0f);
+
+	auto levelUp = Sprite::create("levelUp.png");
+	levelUp->setPosition(randomX, randomY);
+
+	float scale = 2 * 20 / levelUp->getContentSize().width;
+	levelUp->setScale(scale);
+
+	auto physicsBody = PhysicsBody::createCircle(20, PhysicsMaterial(0.1f, 1.0f, 0.0f));
+	physicsBody->setTag(40);
+	physicsBody->setContactTestBitmask(0x08);
+	physicsBody->setCollisionBitmask(0x08);
+	physicsBody->setCategoryBitmask(0x08);
+	physicsBody->setDynamic(false);
+
+	levelUp->setPhysicsBody(physicsBody);
+
+	addChild(levelUp);
+}
+
+void GameScene::LevelUp(Sprite* levelUp) {
+	levelUp->removeFromParentAndCleanup(true);
+	SimpleAudioEngine::sharedEngine()->playEffect("music/LevelUpBGM.mp3", false);
+	if (shootInterval - 0.02 > 0) shootInterval -= 0.02f;
+	bulletSpeed += 100.0f;
 }

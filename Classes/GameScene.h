@@ -35,6 +35,8 @@ private:
 	float shootInterval;
 	float creatInterval;
 	float bulletSpeed;
+	float circleSpeed;
+	float squareSpeed;
 	float time;
 
 	cocos2d::Label* scoreLable;
@@ -59,9 +61,12 @@ private:
 	void removeBlock(Sprite*);
 	void updateScore(int score, cocos2d::Label*, int flag);
 	void initBlockPhysicalBody(Block* block);
+	void LoadMusic();
 	void PlayBackgroundMusic();
 	void Clear();
 	void GameOver(Block* block);
+	void AddLevelUp(float);
+	void LevelUp(Sprite*);
 };
 
 #endif // __GAME_Scene_H__

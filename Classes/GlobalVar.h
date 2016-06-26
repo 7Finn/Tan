@@ -4,6 +4,7 @@
 class GlobalVar {
  public:
 	static int GlobalScore;
+	static bool lose;
 };
 
 #endif
