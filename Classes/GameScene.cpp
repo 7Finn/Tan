@@ -340,6 +340,7 @@ bool GameScene::onConcactBegan(PhysicsContact& contact) {
 				block->removeFromParentAndCleanup(true);
 			}
 			else {
+				if ((blockNumber + 1) % 10 == 0) block->ChangeBlockBackground(blockNumber, 50, block->getType());
 				block->setNumber(blockNumber);
 			}
 

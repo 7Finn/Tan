@@ -11,7 +11,7 @@ Block* Block::createSquareBlock(int number, int width, int height) {
 		block->setPhysicsBody(physicsBody);
 		block->setType(Square);
 
-		Color3B color = AddBlockBackground(number, width, Square, block);
+		Color3B color = block->ChangeBlockBackground(number, width, Square);
 		block->InitBlockLabel(number, color);
 		return block;
 	}
@@ -27,7 +27,7 @@ Block* Block::createCircleBlock(int number, float radius) {
 		block->setPhysicsBody(physicsBody);
 		block->setType(Circle);
 
-		Color3B color = AddBlockBackground(number, 2 * radius, Circle, block);
+		Color3B color = block->ChangeBlockBackground(number, 2 * radius, Circle);
 		block->InitBlockLabel(number, color);
 		return block;
 	}
@@ -35,7 +35,13 @@ Block* Block::createCircleBlock(int number, float radius) {
 	return NULL;
 }
 
-Color3B Block::AddBlockBackground(int number, int length, blockType type, Block* block) {
+Color3B Block::ChangeBlockBackground(int number, int length, blockType type) {
+
+	if (this->getChildByTag(-5) != NULL) {
+		Sprite* bg = (Sprite*)(this->getChildByTag(-5));
+		bg->removeFromParentAndCleanup(true);
+		bg = NULL;
+	}
 
 	// 根据number获取图片，文字颜色
 	int picNum;
@@ -61,7 +67,10 @@ Color3B Block::AddBlockBackground(int number, int length, blockType type, Block*
 	float scale = length / background->getContentSize().width;
 	background->setScale(scale);
 	background->setTag(-5);
-	block->addChild(background);
+	this->addChild(background);
+
+	// 设置文字颜色
+	if (b_lablenumber != NULL) b_lablenumber->setColor(color);
 
 	return color;
 }

@@ -11,7 +11,7 @@ public:
 	Block();
 	static Block* createSquareBlock(int number, int width, int height); //创建正方形方块
 	static Block* createCircleBlock(int number, float radius); //创建圆形
-	static Color3B AddBlockBackground(int number, int length, blockType type, Block* block);
+	Color3B ChangeBlockBackground(int number, int length, blockType type);
 	int getNumber() { return b_number; }
 	void setNumber(int number);
 	bool getIsMerging() { return this->isMerging; };
