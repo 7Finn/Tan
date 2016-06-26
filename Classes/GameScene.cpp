@@ -11,7 +11,7 @@ void GameScene::setPhysicsWorld(PhysicsWorld* world) { m_world = world; }
 Scene* GameScene::createScene()
 {
 	auto scene = Scene::createWithPhysics();
-	scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
+	//scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
 	scene->getPhysicsWorld()->setGravity(Point(0, 0));
 
 	auto layer = GameScene::create(scene->getPhysicsWorld());
@@ -33,11 +33,7 @@ bool GameScene::init(PhysicsWorld* world)
 	this->setPhysicsWorld(world);
 	visibleSize = Director::getInstance()->getVisibleSize();
 	origin = Director::getInstance()->getVisibleOrigin();
-	auto tmx = TMXTiledMap::create("map.tmx");
-	tmx->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2));
-	tmx->setAnchorPoint(Vec2(0.5, 0.5));
-	tmx->setScale(Director::getInstance()->getContentScaleFactor());
-	this->addChild(tmx, 0);
+
 	Vec2 origin = Director::getInstance()->getVisibleOrigin();
 	GlobalVar::GlobalScore = -1;
 	
@@ -47,7 +43,6 @@ bool GameScene::init(PhysicsWorld* world)
 	addContactListener();
 	addEdge();
 	addPlayer();
-	LoadMusic();
 	PlayBackgroundMusic();
 
 
@@ -59,7 +54,6 @@ bool GameScene::init(PhysicsWorld* world)
 	score = 0;
 	time = 0.0f;
 
-	//添加分数
 	TTFConfig ttfConfig;
 	ttfConfig.fontFilePath = "fonts/arial.ttf";
 	ttfConfig.fontSize = 36;
@@ -363,30 +357,14 @@ bool GameScene::onConcactBegan(PhysicsContact& contact) {
 		if (tag1 == 50) {
 			Block* block2;
 			block2 = (Block*)sp2;
-
-			// 跳转回开始界面的回调
-			auto gameEnd = CallFunc::create([this]() {
-				GlobalVar::GlobalScore = score;
-				Director::getInstance()->replaceScene(TransitionFade::create(1.0f, StartScene::createScene(), Color3B(0, 0, 0)));
-			});
-
-			auto moveTo = MoveTo::create(0.5f, player->getPosition());
-			block2->stopAllActions();
-			block2->runAction(Sequence::create(moveTo, gameEnd, nullptr));
+			
+			GameOver(block2);
 		}
 		else if (tag2 == 50) {
 			Block* block1;
 			block1 = (Block*)sp1;
 
-			// 跳转回开始界面的回调
-			auto gameEnd = CallFunc::create([this]() {
-				GlobalVar::GlobalScore = score;
-				Director::getInstance()->replaceScene(TransitionFade::create(1.0f, StartScene::createScene(), Color3B(0, 0, 0)));
-			});
-
-			auto moveTo = MoveTo::create(0.5f, player->getPosition());
-			block1->stopAllActions();
-			block1->runAction(Sequence::create(moveTo, gameEnd, nullptr));
+			GameOver(block1);
 		}
 	}
 	return true;
@@ -447,7 +425,7 @@ void GameScene::mergeBlock(Block* block1, Block* block2) {
 
 		block->setPosition(pos);
 		initBlockPhysicalBody(block);
-		block->runAction(MoveTo::create(random(40.0f, 50.0f), player->getPosition()));
+		block->runAction(MoveTo::create(random(40.0f, 50.0f), this->player->getPosition()));
 		blocks.push_back(block);
 		addChild(block);
 	});
@@ -478,5 +456,25 @@ void GameScene::updateScore(int s, Label* sLabel, int flag) {
 
 void GameScene::PlayBackgroundMusic() {
 	//开始播放背景音乐，true表示循环
-	SimpleAudioEngine::sharedEngine()->playBackgroundMusic("music/Spectre.mp3", true);
+	//SimpleAudioEngine::sharedEngine()->playBackgroundMusic("music/Spectre.mp3", true);
+}
+
+void GameScene::Clear() {
+	this->unschedule(schedule_selector(GameScene::createBlockC));
+	this->unschedule(schedule_selector(GameScene::createBlockS));
+	_eventDispatcher->removeAllEventListeners();
+}
+
+void GameScene::GameOver(Block* block) {
+	block->setIsMerging(true);
+	// 跳转回开始界面的回调
+	auto gameEnd = CallFunc::create([this]() {
+		GlobalVar::GlobalScore = score;
+		Clear();
+		Director::getInstance()->replaceScene(TransitionFade::create(1.0f, StartScene::createScene(), Color3B(0, 0, 0)));
+	});
+
+	auto moveTo = MoveTo::create(0.5f, player->getPosition());
+	block->stopAllActions();
+	block->runAction(Sequence::create(moveTo, gameEnd, nullptr));
 }

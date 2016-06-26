@@ -23,6 +23,7 @@ public:
 	// implement the "static create()" method manually
 	static GameScene* create(PhysicsWorld* world);
 
+
 private:
 	Sprite* player;
 	Sprite* controlCenter;
@@ -59,6 +60,8 @@ private:
 	void updateScore(int score, cocos2d::Label*, int flag);
 	void initBlockPhysicalBody(Block* block);
 	void PlayBackgroundMusic();
+	void Clear();
+	void GameOver(Block* block);
 };
 
 #endif // __GAME_Scene_H__

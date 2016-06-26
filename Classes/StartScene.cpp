@@ -128,14 +128,16 @@ void StartScene::ToGameSence(Ref* pSender) {
 }
 
 void StartScene::AddScore() {
-	auto score = Sprite::create("title.png");
-	score->setPosition(Vec2(visibleSize.width*0.5, visibleSize.height*0.5));
-	addChild(score);
-
+	
 	TTFConfig ttfConfig;
 	ttfConfig.fontFilePath = "fonts/arial.ttf";
 	ttfConfig.fontSize = 36;
 
+	auto score = Label::createWithTTF(ttfConfig, "GameOver");
+	score->setPosition(Vec2(visibleSize.width*0.5, visibleSize.height*0.5));
+	addChild(score);
+
+	ttfConfig.fontSize = 30;
 	auto scoreLable = Label::createWithTTF(ttfConfig, "");
 	scoreLable->setPosition(Vec2(origin.x + visibleSize.width / 2, visibleSize.height*0.35));
 	addChild(scoreLable, 100);
@@ -145,7 +147,7 @@ void StartScene::AddScore() {
 	ss.clear();
 	ss << GlobalVar::GlobalScore;
 	ss >> score_text;
-	scoreLable->setString(score_text);
+	scoreLable->setString("Score: " + score_text);
 	scoreLable->updateContent();
 }
 
